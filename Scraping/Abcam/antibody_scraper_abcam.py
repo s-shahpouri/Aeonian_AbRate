@@ -10,12 +10,10 @@ class ProductScraper:
         self.search_query = search_query
 
     def is_valid_product(self, product_name):
-        # Check if product_name contains "AKT2" and "EPR"
-        if "AKT2" in product_name and "EPR" in product_name:
-            # Check if there are no other numbers in the product_name
-            if not any(char.isdigit() for char in product_name):
-                return True
-        return False
+        product_name = product_name.lower()
+        if search_query in product_name and secret_word in product_name and "anti" in product_name:
+            print(product_name)
+            return True
 
     def scrape_products(self):
         # Create a directory to store the scraped product data
@@ -24,6 +22,7 @@ class ProductScraper:
 
         # Send a GET request to the XHR endpoint for product data
         xhr_url = f"{self.base_url}/_next/data/kxhLvQLxR36HnrpiGFM2b/en-nl/search.json?sorting=relevance&keywords={self.search_query}"
+
         response = requests.get(xhr_url)
 
         if response.status_code == 200:
@@ -33,13 +32,16 @@ class ProductScraper:
                           indent=4, ensure_ascii=False)
 
             # Parse the JSON response
-            product_data = response.json()
+            product_data = response.json().get('pageProps', {}).get(
+                'searchResults', {}).get('items', [])
 
             # Extract and save product information
-            for product in product_data.get('items', []):
+            for product in product_data:
                 product_name = product.get('productName', 'Unknown')
+                # print(product_name)
 
                 if self.is_valid_product(product_name):
+                    # print("......")
                     product_price = product.get('Price', 'N/A')
                     product_description = product.get('Description', 'N/A')
 
@@ -63,7 +65,7 @@ class ProductScraper:
 if __name__ == "__main__":
     folder_to_save_data = "abcam_products"
     base_url = "https://www.abcam.com"
-    search_query = "AKT2"
-
+    search_query = "AKT3".lower()
+    secret_word = "EPR".lower()
     scraper = ProductScraper(folder_to_save_data, base_url, search_query)
     scraper.scrape_products()
